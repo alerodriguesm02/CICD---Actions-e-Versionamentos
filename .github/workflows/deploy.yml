@@ -15,7 +15,10 @@ jobs:
           fetch-depth: 0
 
       - name: Dependências
-        run: npm install --force      
+        run: npm install --force  
+
+      - name: ESLint
+        run: npm install --save-dev eslint-plugin-jest
 
       - name: Semver
         run: npm install -g semver       
