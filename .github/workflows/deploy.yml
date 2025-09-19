@@ -21,7 +21,7 @@ jobs:
         run: npm install -g semver       
 
       - name: Build
-        run: npm build
+        run: npm run build
 
       - name: Testes
         run: npm test -- --coverage
