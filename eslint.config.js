@@ -25,7 +25,7 @@ export default [
         module: "readonly",
         require: "readonly",
         // Testes
-        jest: "readonly"
+        jest: "true"
       }
     },
     rules: {
