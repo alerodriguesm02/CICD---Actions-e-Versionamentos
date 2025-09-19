@@ -1,0 +1,27 @@
+{
+  "name": "devops-actions-express-swagger",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "eslint . && echo \"Build OK\"",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@types/jest": "^29.5.14",
+    "@types/supertest": "^2.0.16",
+    "eslint": "^9.36.0",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}

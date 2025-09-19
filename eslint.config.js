@@ -1,7 +1,9 @@
 // eslint.config.js
 // @ts-check
 import js from "@eslint/js";
+
 import jest from "eslint-plugin-jest"; // <-- 1. Importe o plugin do Jest
+
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
@@ -25,7 +27,12 @@ export default [
         __dirname: "readonly",
         module: "readonly",
         require: "readonly",
+
         // Remova o 'jest: "true"' daqui, pois o plugin vai cuidar disso
+
+        // Testes
+        jest: "true"
+
       }
     },
     rules: {
@@ -36,6 +43,7 @@ export default [
 
   // ajustes específicos para testes
   {
+
     // 2. Aplique a configuração recomendada do Jest aqui
     ...jest.configs['flat/recommended'],
     files: ["tests/**/*.test.js"],
@@ -46,3 +54,4 @@ export default [
     }
   }
 ];
+
