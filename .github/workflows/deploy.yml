@@ -166,19 +166,34 @@ jobs:
             git push origin "v${NEW_VERSION}"
           fi
 
-      # Envio de e-mail EM CASO DE FALHA no pipeline
       - name: Enviar email se falhar
         if: failure()
-        uses: dawidd6/action-send-mail@v3          
-      # Cadastrar os dados para envio de e-mail e recupera-los aqui 
-      # Ex.: SMTP DO SERVIDOR DE E-MAIL / PORTA / USUARIO / SENHA / EMAIL E API/TOKEN PARA ENVIO DE E-MAIL)
-      # No gmail há uma configuração para geração de secret para envio de e-mails por aplicativos terceiros
-      # E-mail deve ser enviado para: fe.dsm.vot.001@gmail.com
-      # Assunto: Falha pipeline Actions
-      # Conteúdo: 
-          #  A execução falhou.
-          #  Repositório: ${{ github.repository }}
-          #  Commit: ${{ github.sha }}
-          #  Workflow: ${{ github.workflow }}
-          #  Job: ${{ github.job }}
-          #  Veja os logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          # Configurações do servidor de e-mail (exemplo para o Gmail)
+          server_address: smtp.gmail.com
+          server_port: 465
+          
+          # Usuário e senha do e-mail, salvos como secrets no seu repositório
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          
+          # Assunto do e-mail
+          subject: Falha na pipeline do repositório ${{ github.repository }}
+
+          # Corpo do e-mail (usamos o pipe | para múltiplas linhas)
+          body: |
+            A execução do workflow falhou.
+            Repositório: ${{ github.repository }}
+            Commit: ${{ github.sha }}
+            Workflow: ${{ github.workflow }}
+            Job: ${{ github.job }}
+            
+            Veja os logs completos aqui:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+          # Para quem o e-mail será enviado
+          to: fe.dsm.vot.001@gmail.com
+          
+          # De quem o e-mail é (opcional, mas recomendado)
+          from: GitHub Actions <${{ secrets.MAIL_USERNAME }}>
