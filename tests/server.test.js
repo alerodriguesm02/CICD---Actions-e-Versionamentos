@@ -1,79 +1,41 @@
-// Arquivo: tests/server.test.js
+import request from "supertest";
+import app from "../server.js";
 
-import request from 'supertest';
-import server from '../server.js'; 
-
-let app;
-let testItem;
-
-// beforeAll: Inicia o servidor antes de todos os testes.
-beforeAll(() => {
-  app = server.listen(3001); 
-});
-
-// afterAll: Fecha o servidor depois de todos os testes, usando uma Promise para compatibilidade com o ESLint.
-afterAll(() => {
-  return new Promise((resolve) => {
-    app.close(() => {
-      resolve();
-    });
-  });
-});
-
-// Bloco principal que agrupa os testes da API de Itens
 describe("Items API", () => {
-
-  // beforeEach: Cria um item novo antes de cada teste.
-  beforeEach(async () => {
-    const newItem = { name: `Item de Teste - ${Date.now()}` };
-    const response = await request(app).post('/items').send(newItem);
-    
-    if (response.status !== 201) {
-      throw new Error("Falha ao criar item de teste no beforeEach");
-    }
-    
-    testItem = response.body;
-  });
-
-  // afterEach: Limpa os dados criados depois de cada teste.
-  afterEach(async () => {
-    if (testItem && testItem.id) {
-      await request(app).delete(`/items/${testItem.id}`);
-    }
-  });
-
-  // --- Testes ---
-
-  it("GET /health deve responder com status 200", async () => {
+  it("GET /health deve responder ok", async () => {
     const res = await request(app).get("/health");
     expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
   });
 
-  it("GET /items deve listar ao menos 1 item", async () => {
-    const res = await request(app).get("/items");
+  it("POST /items cria item", async () => {
+    const res = await request(app).post("/items").send({ name: "caderno", quantity: 2 });
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({ name: "caderno", quantity: 2 });
+    expect(res.body.id).toBeDefined();
+  });
 
+  it("GET /items lista ao menos 1", async () => {
+    const res = await request(app).get("/items");
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBeGreaterThan(0);
   });
 
-  it("PUT /items/:id deve atualizar um item", async () => {
-    const updatedData = { name: "Item Atualizado" };
-    
-    const res = await request(app)
-      .put(`/items/${testItem.id}`)
-      .send(updatedData);
-      
-    expect(res.status).toBe(200);
-    expect(res.body.name).toBe("Item Atualizado");
+  it("PUT /items/:id atualiza item", async () => {
+    const created = await request(app).post("/items").send({ name: "lapis", quantity: 1 });
+    const id = created.body.id;
+    const updated = await request(app).put(`/items/${id}`).send({ quantity: 5 });
+    expect(updated.status).toBe(200);
+    expect(updated.body.quantity).toBe(5);
   });
 
-  it("DELETE /items/:id deve remover um item", async () => {
-    const res = await request(app).delete(`/items/${testItem.id}`);
-    
-    expect(res.status).toBe(204);
-
-    const getResponse = await request(app).get(`/items/${testItem.id}`);
-    expect(getResponse.status).toBe(404);
+  it("DELETE /items/:id remove item", async () => {
+    const created = await request(app).post("/items").send({ name: "caneta", quantity: 3 });
+    const id = created.body.id;
+    const del = await request(app).delete(`/items/${id}`);
+    expect(del.status).toBe(204);
+    const get = await request(app).get(`/items/${id}`);
+    expect(get.status).toBe(404);
   });
 });
