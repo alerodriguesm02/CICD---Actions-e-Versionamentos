@@ -1,65 +1,86 @@
-// tests/server.test.js
-import request from 'supertest';
-import server from '../server.js'; // Importe seu servidor/app
+// Arquivo: tests/server.test.js
 
-// Variável para guardar o servidor e os dados
+import request from 'supertest';
+// Certifique-se de que o caminho para o seu arquivo principal do servidor está correto
+import server from '../server.js'; 
+
+// Variável para guardar a instância do servidor e os dados de teste
 let app;
 let testItem;
 
-// beforeAll é executado UMA VEZ antes de todos os testes neste arquivo
+// beforeAll: Roda UMA VEZ antes de todos os testes deste arquivo começarem.
+// Ideal para iniciar o servidor.
 beforeAll(() => {
-  app = server.listen(3001); // Inicia um servidor de teste em outra porta
+  // Usamos uma porta diferente da padrão para evitar conflitos
+  app = server.listen(3001); 
 });
 
-// afterAll é executado UMA VEZ depois de todos os testes
+// afterAll: Roda UMA VEZ depois que todos os testes deste arquivo terminarem.
+// Ideal para limpar recursos, como fechar o servidor.
 afterAll((done) => {
-  app.close(done); // Fecha o servidor para não deixar processos abertos
+  app.close(done);
 });
 
+// Bloco principal que agrupa os testes da API de Itens
 describe("Items API", () => {
-  // beforeEach é executado ANTES DE CADA teste dentro deste describe
-  beforeEach(async () => {
-    // Vamos criar um item usando a API para garantir que ele existe
-    const response = await request(app)
-      .post('/items')
-      .send({ name: 'Item de Teste' });
 
-    testItem = response.body; // Salva o item criado para usar em outros testes
-    expect(response.status).toBe(201); // Garante que o item foi criado
+  // beforeEach: Roda ANTES DE CADA teste ('it') dentro deste bloco.
+  // Perfeito para criar um estado inicial limpo para cada teste.
+  beforeEach(async () => {
+    // Criamos um item novo para cada teste, garantindo um ambiente limpo.
+    const newItem = { name: `Item de Teste - ${Date.now()}` };
+    const response = await request(app).post('/items').send(newItem);
+    
+    // Verificamos se o item foi realmente criado antes de prosseguir
+    if (response.status !== 201) {
+      throw new Error("Falha ao criar item de teste no beforeEach");
+    }
+    
+    testItem = response.body; // Guardamos o item criado para usar nos testes
   });
 
-  // OPCIONAL: Limpa os dados depois de cada teste para garantir isolamento
+  // afterEach: Roda DEPOIS DE CADA teste ('it') dentro deste bloco.
+  // Essencial para limpar os dados criados e não deixar um teste interferir no outro.
   afterEach(async () => {
-    // Remove o item que criamos para que o próximo teste comece do zero
     if (testItem && testItem.id) {
       await request(app).delete(`/items/${testItem.id}`);
     }
   });
 
-  it("GET /health deve responder ok", async () => {
+  // --- Testes ---
+
+  it("GET /health deve responder com status 200", async () => {
     const res = await request(app).get("/health");
     expect(res.status).toBe(200);
   });
 
-  // AGORA ESTE TESTE VAI PASSAR!
-  it("GET /items lista ao menos 1", async () => {
+  it("GET /items deve listar ao menos 1 item", async () => {
     const res = await request(app).get("/items");
+
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
-    // Como o beforeEach adicionou um item, o tamanho será maior que 0
+    // Este teste agora vai passar, pois o beforeEach garante que existe pelo menos um item.
     expect(res.body.length).toBeGreaterThan(0);
   });
 
-  it("PUT /items/:id atualiza item", async () => {
+  it("PUT /items/:id deve atualizar um item", async () => {
+    const updatedData = { name: "Item Atualizado" };
+    
     const res = await request(app)
-      .put(`/items/${testItem.id}`) // Usa o ID do item criado no beforeEach
-      .send({ name: "Item Atualizado" });
+      .put(`/items/${testItem.id}`) // Usamos o ID do item criado no beforeEach
+      .send(updatedData);
+      
     expect(res.status).toBe(200);
     expect(res.body.name).toBe("Item Atualizado");
   });
 
-  it("DELETE /items/:id remove item", async () => {
-    const res = await request(app).delete(`/items/${testItem.id}`); // Usa o ID
-    expect(res.status).toBe(204);
+  it("DELETE /items/:id deve remover um item", async () => {
+    const res = await request(app).delete(`/items/${testItem.id}`); // Usamos o ID
+    
+    expect(res.status).toBe(204); // Status 204 (No Content) é comum para DELETE bem-sucedido
+
+    // Verificação extra: Tenta buscar o item deletado e espera um erro 404 (Not Found)
+    const getResponse = await request(app).get(`/items/${testItem.id}`);
+    expect(getResponse.status).toBe(404);
   });
 });
