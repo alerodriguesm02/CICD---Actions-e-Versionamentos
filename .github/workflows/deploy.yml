@@ -4,9 +4,22 @@ on:
   push:
     branches: [develop]
 
+
+
+
 jobs:
   pipeline:
     runs-on: ubuntu-latest
+
+    permisions:
+      contents: write
+      packages: write
+      pull-requests: write
+      actions: write
+      id-token: write
+      checks: write
+      statuses: write
+      deployments: write
 
     steps:
       - name: Checkout code
